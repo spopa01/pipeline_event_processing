@@ -32,10 +32,8 @@ int main(/*...*/){
   //DEFINE THE STAGES
   auto ev_proc_lambda1 = std::make_shared< lambda_event_processor_t >(
     []( event_sptr_t const& event ) -> event_sptr_t {
-      
-      if( event && event->get_type() ){
-        auto value = ( std::static_pointer_cast<value_event_t>(event) )->value_ * 2; // op  x*2
-        return std::make_shared< value_event_t >( value );
+      if( event && event->get_type() == value_event_t::type ){
+        return std::make_shared< value_event_t >( ( std::static_pointer_cast<value_event_t>(event) )->value_ * 2 ); //op: x*2
       }
 
       return event_sptr_t();
@@ -44,10 +42,8 @@ int main(/*...*/){
   
   auto ev_proc_lambda2 = std::make_shared< lambda_event_processor_t >(
     []( event_sptr_t const& event ) -> event_sptr_t {
-      
-      if( event && event->get_type() ){
-        auto value = ( std::static_pointer_cast<value_event_t>(event) )->value_ + 1; // op : x+1
-        return std::make_shared< value_event_t >( value );
+      if( event && event->get_type() == value_event_t::type ){
+        return std::make_shared< value_event_t >( ( std::static_pointer_cast<value_event_t>(event) )->value_ + 1 ); // op: x+1
       }
 
       return event_sptr_t();
