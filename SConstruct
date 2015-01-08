@@ -1,12 +1,16 @@
-env = Environment()
+env = Environment( CC = '/opt/local/bin/gcc', CXX = '/opt/local/bin/g++' )
+#env = Environment()
 
-env.Append(CPPPATH = ['/usr/include/', '/opt/intel/tbb/include/'])
+print "CC is:", env['CC']
+print "CXX is:", env['CXX']
 
-env.Append(CCFLAGS = ['-O3', '-std=c++11', '-pthread'])
+env.Append(CPPPATH = ['/opt/local/include/'])
 
-env.Append(LIBPATH = ['/usr/lib/', '/opt/intel/tbb/lib/'])
+env.Append(CPPFLAGS = ['-O3', '-std=c++11', '-pthread'])
 
-env.Append(LIBS = [ 'pthread', 'tbb' ])
+env.Append(LIBPATH = ['/opt/local/lib/'])
+
+env.Append(LIBS = ['pthread', 'tbb'])
 
 #env.Append(LINKFLAGS = ['-Wl,--no-as-needed'])
 

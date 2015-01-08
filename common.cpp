@@ -11,8 +11,8 @@ const int stop_event_t::type = 2;
 
 // simple pipeline
 
-simple_event_processor_pipeline_t::simple_event_processor_pipeline_t()
-  : event_processor_pipeline_t()
+simple_event_processor_pipeline_t::simple_event_processor_pipeline_t( event_callback_t && callback )
+	: event_processor_pipeline_t( std::forward<event_callback_t>(callback) )
 {}
 
 void simple_event_processor_pipeline_t::add_stage( event_processor_sptr_t const& event_processor ){
@@ -21,27 +21,29 @@ void simple_event_processor_pipeline_t::add_stage( event_processor_sptr_t const&
 }
 
 event_sptr_t simple_event_processor_pipeline_t::operator()( event_sptr_t const& event ){
-  event_sptr_t comp_event;
+  event_sptr_t out_event;
 
-  switch( state_ ){
+  switch( get_state() ){
     case state_t::idle:
       if(event->get_type() == start_event_t::type)
-        state_ = state_t::running;
+        set_state( state_t::running );
     break;
     
     case state_t::running:
       if(event->get_type() != stop_event_t::type){
-        comp_event = event;
+        out_event = event;
         for( auto & stage : stages_ )
-          comp_event = (*stage)( comp_event );
+          out_event = (*stage)( out_event );
+				if( callback_ )
+					callback_( out_event );
       }else
-        state_ = state_t::stopped;
+        set_state( state_t::stopped );
     break;
 
     case state_t::stopped: break;
   }
 
-  return comp_event;
+  return out_event;
 }
 
 //tbb pipeline
@@ -67,26 +69,23 @@ public:
   class input_filter_t: public tbb::filter {
   public:
     input_filter_t( tbb_event_processor_pipeline_t::impl_t *host ) 
-    //  : tbb::filter(serial_in_order), host_{host}
-      : tbb::filter(parallel), host_{host}
+      : tbb::filter(serial_in_order), host_{host}
+    //: tbb::filter(parallel), host_{host}
     {}
 
   private:
     tbb_event_processor_pipeline_t::impl_t *host_;
 
     void* operator()(void *in){
-      if( host_->host_->get_state() == state_t::running ){
-        //get a token..
-        tbb_token_t *token; 
-        //read the current event...
-        host_->input_.pop( token );
-        //pass it further into the chain...
-        if( token->event->get_type() != stop_event_t::type )
-          return (void*)(token);
-        else
-          token->done = true;
-      }
-
+			//get a token..
+			tbb_token_t *token; 
+			//read the current event...
+			host_->input_.pop( token );
+			//pass it further into the chain...
+			if( token->event->get_type() != stop_event_t::type )
+				return (void*)(token);
+			//or stop processing once we receive the stop event...
+			token->done = true;
       return nullptr;
     }
   };
@@ -94,8 +93,8 @@ public:
   class output_filter_t: public tbb::filter {
   public:
     output_filter_t(tbb_event_processor_pipeline_t::impl_t *host) 
-    : tbb::filter(serial_in_order), host_{host}
-    //  : tbb::filter(parallel), host_{host}
+			: tbb::filter(serial_in_order), host_{host}
+    //: tbb::filter(parallel), host_{host}
     {}
 
   private:
@@ -173,16 +172,16 @@ public:
         break;
 
         case state_t::running:{
-          //process event
           if( event->get_type() == stop_event_t::type )
             host_->set_state( state_t::stopped );
 
+          //process event
           tbb_token_t token{event};
           input_.push( &token );
           while( !token.done ){ 
-            //std::this_thread::yield();
+            std::this_thread::yield();
             //std::this_thread::sleep_for( millisec );
-            std::this_thread::sleep_for( nanosec );
+            //std::this_thread::sleep_for( nanosec );
           }
 
           if( event->get_type() != stop_event_t::type )
@@ -207,8 +206,8 @@ public:
   tbb::concurrent_bounded_queue< tbb_token_t* > input_;
 };
 
-tbb_event_processor_pipeline_t::tbb_event_processor_pipeline_t( size_t live_tokens ) 
-  : event_processor_pipeline_t(), 
+tbb_event_processor_pipeline_t::tbb_event_processor_pipeline_t( event_callback_t && callback, size_t live_tokens ) 
+  : event_processor_pipeline_t( std::forward<event_callback_t>(callback) ), 
     impl_{ new tbb_event_processor_pipeline_t::impl_t{ this, live_tokens } }
 {}
 

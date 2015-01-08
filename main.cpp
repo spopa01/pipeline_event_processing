@@ -117,7 +117,7 @@ public:
 int run_big_events_test( event_processor_pipeline_sptr_t const& pipeline, int num_events, int num_samples_per_event ){
   std::vector<int> computed_values;
 
-  std::vector<int> values;
+	std::vector<int> values;
   for( int i=0; i<num_events; ++i ){
       for( int j=0; j<num_samples_per_event; ++j )
           values.push_back( i );
@@ -140,88 +140,17 @@ int run_big_events_test( event_processor_pipeline_sptr_t const& pipeline, int nu
   return std::accumulate( computed_values.begin(), computed_values.end(), 0 );
 }
 
-#include <thread>
-#include <functional>
-#include <vector>
-
-using task_t = std::function<void()>;
-
-thread_local unsigned int thread_num;
-thread_local unsigned int num_threads;
-
-class thread_pool{
-private:
-  std::vector<std::thread> pool;
-
-public:
-  template<typename T>
-  thread_pool( size_t n_thrds, T task ){
-    for( size_t n = 0; n < n_thrds; ++n )
-      pool.emplace_back([=](){ thread_num = n; num_threads = n_thrds; task(); });
-  }
-
-  void wait(){ for( auto& thrd : pool ) thrd.join(); }
-  void no_wait(){ for( auto& thrd : pool ) thrd.detach(); }
-};
-
-#define parallel_do(N, ...) thread_pool (N, [__VA_ARGS__]()
-#define end_wait ).wait();
-#define end_no_wait ).no_wait();
-
-#define split(cond) if(cond)
-#define single(N) if(thread_num == N)
-#define master if(thread_num == 0)
-
-#include <tbb/concurrent_queue.h>
-int run_big_events_test_mt( event_processor_pipeline_sptr_t const& pipeline, int num_events, int num_samples_per_event ){
-  const int NT = 4;
-  std::array<std::vector<int>, NT> computed_values;
-
-  int NPT = num_events/NT;
-
-  std::vector<int> values;
-  for( int i=0; i<num_events; ++i ){
-      for( int j=0; j<num_samples_per_event; ++j )
-          values.push_back( i );
-  }
-
-  int* buff = values.data();
-
-  auto start = hrc::now();
-  
-  parallel_do( NT, &pipeline, &computed_values, buff, NPT, num_samples_per_event ){
-    int cnt = 0;
-    int offset = thread_num * NPT;
-    while( cnt++ < NPT ){
-      auto event = (*pipeline)( std::make_shared<buffer_event_t>( num_samples_per_event, buff + (offset+cnt) * num_samples_per_event ) );
-      if( event ){
-        computed_values[thread_num].push_back( ( std::static_pointer_cast<value_event_t>(event) )->value_ );
-      }
-    }
-  }end_wait;
-
-  auto stop = hrc::now();
-  std::cout << "TIME: " << elapsed(start, stop).count() << std::endl;
-
-  int value = 0;
-  for( auto & arr : computed_values ){
-    value = std::accumulate( arr.begin(), arr.end(), value );
-  }
-
-  return value;
-}
-
 void run_big_events_test(){
   auto num_live_tokens = 4;
   auto num_events = 100;
-  auto num_samples_per_event = 1000000;
+  auto num_samples_per_event = 10000000;
   
   //DEFINE THE STAGES
   auto ev_proc_lambda = std::make_shared< lambda_event_processor_t >(
     []( event_sptr_t const& event ) -> event_sptr_t {
       if( event && event->get_type() == buffer_event_t::type ){
-		auto ev = std::static_pointer_cast<buffer_event_t>(event);
-		return std::make_shared< value_event_t >( std::inner_product( ev->values_, ev->values_ + ev->size_, ev->values_, 0 ) );
+				auto ev = std::static_pointer_cast<buffer_event_t>(event);
+				return std::make_shared< value_event_t >( std::inner_product( ev->values_, ev->values_ + ev->size_, ev->values_, 0 ) );
       }
 
       return event_sptr_t();
