@@ -6,7 +6,7 @@ print "CXX is:", env['CXX']
 
 env.Append(CPPPATH = ['/opt/local/include/'])
 
-env.Append(CPPFLAGS = ['-O3', '-std=c++11', '-pthread'])
+env.Append(CPPFLAGS = ['-O3', '-std=c++1y', '-pthread'])
 
 env.Append(LIBPATH = ['/opt/local/lib/'])
 
