@@ -10,7 +10,7 @@ using event_sptr_t = std::shared_ptr< event_t >;
 
 class event_t {
 public:
-	event_t() {}
+  event_t() {}
 	virtual ~event_t() {}
 	virtual int get_type() const = 0;
 };
