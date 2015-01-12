@@ -33,49 +33,43 @@ public:
 
 //...
 
-/*CREATE PIPELINE*/
+#define SCAST_VAL_T( EV ) std::static_pointer_cast<value_event_t>(EV)->value_
+#define IS_VAL_T( EV ) EV && EV->get_type() == value_event_t::type()
+
+/* CREATE A (NOT SO USEFUL) PIPELINE TO COMPUTE 2x+1 */
 auto pipeline =
   std::make_shared<tbb_event_processor_pipeline_t>(
     []( event_sptr_t const& event ) -> event_sptr_t { /*the callback*/
-      if( event )
-        std::cout << ( std::static_pointer_cast<value_event_t>(event) )->value_ << " ";
-      else 
-        std::cout << "error ";
+      std::cout << (IS_VAL_T(event) ? std::to_string(SCAST_VAL_T(event)) : std::string("error")) << " ";
+      return event;
+    }, /*active_tokens= */4 );
+
+/* ADD STAGES TO THE PIPELINE */
+pipeline->add_stage( // stage 1 : y = 2*x
+  []( event_sptr_t const& event ) -> event_sptr_t {
+    if( IS_VAL_T(event) ){ SCAST_VAL_T(event) *= 2; }
     return event;
-  }, /*active_tokens= */4 );
-
-/*ADD STAGES TO THE PIPELINE*/
-pipeline->add_stage( // stage 1
-  []( event_sptr_t const& event ) -> event_sptr_t {
-    if( event && event->get_type() == value_event_t::type() ){
-      return std::make_shared< value_event_t >( ( std::static_pointer_cast<value_event_t>(event) )->value_ * 2 ); //op: x*2
-    }
-    return event_sptr_t();
   });
-pipeline->add_stage( //stage 2
+pipeline->add_stage( //stage 2 : z = y+1 = 2x+1
   []( event_sptr_t const& event ) -> event_sptr_t {
-    if( event && event->get_type() == value_event_t::type() ){
-      return std::make_shared< value_event_t >( ( std::static_pointer_cast<value_event_t>(event) )->value_ + 1 ); // op: x+1
-    }
-    return event_sptr_t();
+    if( IS_VAL_T(event) ){ SCAST_VAL_T(event) += 1; }
+    return event;
   });
 
-/*START PIPELINE*/
+/* START PIPELINE */
 (*pipeline)( std::make_shared<start_event_t>() );
 
-/*PROCESS USING PIPELINE*/
+/* PROCESS USING THE PIPELINE */
 for( int i=0; i<10; ++i )
   (*pipeline)( std::make_shared<value_event_t>( i ) );
 
-/*STOP PIPELINES*/
+/* STOP PIPELINES */
 (*pipeline)( std::make_shared<stop_event_t>() ); 
 
 //...
 
 ```
 
-Input: 0 1 2 3 4 5 6 7 8 9
+Input(x): 0 1 2 3 4 5 6 7 8 9
 
-// 2 * x + 1
-
-Output: 1 3 5 7 9 11 13 15 17 19 
+Output(2x+1): 1 3 5 7 9 11 13 15 17 19 
