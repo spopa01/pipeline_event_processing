@@ -14,6 +14,6 @@ env.Append(LIBS = ['pthread', 'tbb'])
 
 #env.Append(LINKFLAGS = ['-Wl,--no-as-needed'])
 
-t = env.Program(target='main', source=['./common.cpp', './main.cpp'])
+t = env.Program(target='main', source=['./pipeline.cpp', './main.cpp'])
 
 Default(t)

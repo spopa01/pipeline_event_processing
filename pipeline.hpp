@@ -37,11 +37,11 @@ private:
 
 using event_processor_pipeline_sptr_t = std::shared_ptr<event_processor_pipeline_t>;
 
-//simple pipeline
+//serial pipeline
 
-class simple_event_processor_pipeline_t : public event_processor_pipeline_t {
+class serial_event_processor_pipeline_t : public event_processor_pipeline_t {
 public:
-  simple_event_processor_pipeline_t( event_processor_func_t && callback );
+  serial_event_processor_pipeline_t( event_processor_func_t && callback );
 
   void add_stage( event_processor_func_t && processor ) override;
   void operator()( event_sptr_t const& event ) override;
@@ -55,8 +55,8 @@ class tbb_event_processor_pipeline_t : public event_processor_pipeline_t {
 public:
   tbb_event_processor_pipeline_t( event_processor_func_t && callback, size_t live_tokens );
   ~tbb_event_processor_pipeline_t();
-
-  void add_stage( event_processor_func_t && processor ) override;
+	
+	void add_stage( event_processor_func_t && processor ) override;
   void operator()( event_sptr_t const& event ) override;
 
 private:
