@@ -14,6 +14,10 @@ Usage:
 
 ```C++
 
+#include <iostream>
+
+#include "pipeline.hpp"
+
 //...
 
 /*DEFINE SOME CUSTOM EVENTS*/
