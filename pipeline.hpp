@@ -55,13 +55,13 @@ class tbb_event_processor_pipeline_t : public event_processor_pipeline_t {
 public:
   tbb_event_processor_pipeline_t( event_processor_func_t && callback, size_t live_tokens );
   ~tbb_event_processor_pipeline_t();
-	
+
 	void add_stage( event_processor_func_t && processor ) override;
-  void operator()( event_sptr_t const& event ) override;
+	void operator()( event_sptr_t const& event ) override;
 
 private:
-  class impl_t;
-  std::unique_ptr<impl_t> impl_;
+	class impl_t;
+	std::unique_ptr<impl_t> impl_;
 };
 
 #endif//__PIPELINE_H__

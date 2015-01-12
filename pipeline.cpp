@@ -55,6 +55,7 @@ public:
 	class input_filter_t: public tbb::filter {
 	public:
 		input_filter_t( tbb_event_processor_pipeline_t::impl_t *host ) 
+		//	: tbb::filter(serial_in_order), host_{host}{}
 			: tbb::filter(serial_in_order), host_{host}{}
 
 	private:
