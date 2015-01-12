@@ -163,10 +163,55 @@ void run_big_events_test(){
   std::cout << "FEW_BIG_EVENTS_TEST ... " << ( isOk ? "PASSED" : "FAILED" ) << "\n\n";
 }
 
+void usage(){
+  /*CREATE PIPELINE*/
+  auto pipeline =
+    std::make_shared<tbb_event_processor_pipeline_t>(
+      []( event_sptr_t const& event ) -> event_sptr_t { /*the callback*/
+        if( event )
+          std::cout << ( std::static_pointer_cast<value_event_t>(event) )->value_ << " ";
+        else 
+          std::cout << "error ";
+      return event;
+    }, /*active_tokens= */4 );
+  
+  /*ADD STAGES TO THE PIPELINE*/
+  pipeline->add_stage( // stage 1
+    []( event_sptr_t const& event ) -> event_sptr_t {
+      if( event && event->get_type() == value_event_t::type() ){
+        return std::make_shared< value_event_t >( ( std::static_pointer_cast<value_event_t>(event) )->value_ * 2 ); //op: x*2
+      }
+      return event_sptr_t();
+    });
+  pipeline->add_stage( //stage 2
+    []( event_sptr_t const& event ) -> event_sptr_t {
+      if( event && event->get_type() == value_event_t::type() ){
+        return std::make_shared< value_event_t >( ( std::static_pointer_cast<value_event_t>(event) )->value_ + 1 ); // op: x+1
+      }
+      return event_sptr_t();
+    });
+  
+  /*START PIPELINE*/
+  (*pipeline)( std::make_shared<start_event_t>() );
+
+  /*PROCESS USING PIPELINE*/
+  for( int i=0; i<10; ++i )
+    (*pipeline)( std::make_shared<value_event_t>( i ) );
+ 
+  /*STOP PIPELINES*/
+  (*pipeline)( std::make_shared<stop_event_t>() ); 
+}
+
 /* LET'S MOVE SOME DATA AROUND... */
 
-int main(/*...*/){
-  run_small_events_test();
-  run_big_events_test();
+int main( int argc, char **argv ){
+  if( argc == 2 && std::string(argv[1]) == "-test" ){
+    run_small_events_test();
+    run_big_events_test();
+  }else{
+    usage();
+  }
+
+  std::cout << "\n";
   return 0;
 }
