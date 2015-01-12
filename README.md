@@ -5,12 +5,20 @@ Small framework for writing modular algorithms as programmable pipelines...
 
 Pipelining is a common parallel pattern which simulates a traditional manufacturing assembly line.
 
-It's main features are:
+The main features are:
  - for each event entering the pipeline, the transformations (aka stages) will be applied in the order they have been defined;
  - all events will leave the pipeline in the same order they entered;
  - TBB pipeline may allow multiple events to be "in flight” in the same time;
 
 Usage:
+
+```C++
+
+#include <iostream>
+
+#include "pipeline.hpp"
+
+//...
 
 /*DEFINE SOME CUSTOM EVENTS*/
 class value_event_t : public event_t {
@@ -63,5 +71,11 @@ for( int i=0; i<10; ++i )
 (*pipeline)( std::make_shared<stop_event_t>() ); 
 
 //...
+
+```
+
+Input: 0 1 2 3 4 5 6 7 8 9
+
+// 2 * x + 1
 
 Output: 1 3 5 7 9 11 13 15 17 19 
