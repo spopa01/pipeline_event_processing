@@ -55,7 +55,6 @@ public:
   class input_filter_t: public tbb::filter {
   public:
     input_filter_t( tbb_event_processor_pipeline_t::impl_t *host ) 
-    //  : tbb::filter(serial_in_order), host_{host}{}
       : tbb::filter(serial_in_order), host_{host}{}
 
   private:
@@ -91,10 +90,9 @@ public:
         auto token = (tbb_token_t*)in;
         if( host_->host_->callback_ )
           host_->host_->callback_(token->event);
-        //recycle the current token...
-        tbb::tbb_allocator<tbb_token_t>().deallocate( token, 1 );
+          //recycle the current token...
+          tbb::tbb_allocator<tbb_token_t>().deallocate( token, 1 );
       }
-
       return nullptr;
     }
   };
@@ -116,7 +114,6 @@ public:
         token->event = processor_(token->event);
         return in;
       }
-
       return nullptr;
     }
   };
@@ -198,6 +195,4 @@ void tbb_event_processor_pipeline_t::add_stage( event_processor_func_t && proces
   impl_->add_stage( std::forward<event_processor_func_t>(processor) );
 }
 
-void tbb_event_processor_pipeline_t::operator()( event_sptr_t const& event ){
-  (*impl_)( event );
-}
+void tbb_event_processor_pipeline_t::operator()( event_sptr_t const& event ){ (*impl_)( event ); }
