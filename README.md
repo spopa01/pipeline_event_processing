@@ -12,6 +12,10 @@ It's main features are:
 
 Usage:
 
+```C++
+
+//...
+
 /*DEFINE SOME CUSTOM EVENTS*/
 class value_event_t : public event_t {
 public:
@@ -63,5 +67,7 @@ for( int i=0; i<10; ++i )
 (*pipeline)( std::make_shared<stop_event_t>() ); 
 
 //...
+
+```
 
 Output: 1 3 5 7 9 11 13 15 17 19 
