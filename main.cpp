@@ -116,7 +116,7 @@ public:
 void run_big_events_test(){
   auto num_live_tokens = 8;
   auto num_events = 100;
-  auto num_samples_per_event = 10000000;
+  auto num_samples_per_event = 1000000;
   
   //DEFINE THE STAGES
   auto ev_proc =

@@ -62,7 +62,8 @@ public:
 
     void* operator()(void *in){
       //get a token..
-      tbb_token_t *token = tbb::tbb_allocator<tbb_token_t>().allocate(1);
+      //tbb_token_t *token = tbb::tbb_allocator<tbb_token_t>().allocate(1);
+      tbb_token_t *token = new tbb_token_t;
       //read the current event...
       host_->events_.pop( token->event );
       //pass it further into the pipeline...
@@ -70,7 +71,8 @@ public:
         return (void*)(token);
       //or stop processing once we received a stop event...
       //also recycle the current token...
-      tbb::tbb_allocator<tbb_token_t>().deallocate( token, 1 );
+      //tbb::tbb_allocator<tbb_token_t>().deallocate( token, 1 );
+      delete token;
       return nullptr;
     }
   };
@@ -91,7 +93,8 @@ public:
         if( host_->host_->callback_ )
           host_->host_->callback_(token->event);
           //recycle the current token...
-          tbb::tbb_allocator<tbb_token_t>().deallocate( token, 1 );
+          //tbb::tbb_allocator<tbb_token_t>().deallocate( token, 1 );
+          delete token;
       }
       return nullptr;
     }
